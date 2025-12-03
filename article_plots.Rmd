@@ -1,0 +1,252 @@
+---
+title: "Plots"
+output: html_notebook
+---
+
+```{r setup, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(RNAAgeCalc)
+library(ComplexUpset)
+library(patchwork)
+library(scales)
+```
+
+## Samples distribution
+
+```{r}
+samples_healthy <- read_tsv("./data/file1_healthy_samples.tsv") 
+samples_healthy <- column_to_rownames(samples_healthy, var="id")
+```
+
+```{r}
+samples_healthy <- samples_healthy %>%
+  mutate(Dataset_Intercept = as.numeric(factor(dataset)))
+
+age_ranges <- samples_healthy %>%
+  group_by(dataset, Dataset_Intercept) %>%
+  summarise(min_age=min(age), max_age=max(age),.groups = "drop")
+
+ggplot(samples_healthy, aes(x = age, y = Dataset_Intercept)) +
+  geom_segment(data = age_ranges, aes(x = min_age, xend = max_age, y = Dataset_Intercept, yend = Dataset_Intercept),
+              color = "grey", linewidth = 1.2) + 
+  geom_point(aes(color = dataset), size = 2.5) +  # Points for each sample
+  scale_y_continuous(breaks = unique(samples_healthy$Dataset_Intercept), labels = unique(samples_healthy$dataset)) + 
+  labs(title = "Age Distribution by Dataset",
+       x = "Age",
+       y = "Dataset") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14, color = "black"),
+  )+
+  theme(legend.position = "none")
+
+```
+
+```{r, eval=FALSE}
+ggsave("./images/dataset_distribution.png", width = 12, height =6, bg="white" ,dpi = 300)
+```
+
+```{r}
+ggplot(samples_healthy, aes(x = age, fill = gender)) +
+    geom_bar(position = "stack", width = 0.8) +
+    labs(x = "Age", y = "Number of samples", fill = "Gender",
+         title = "Age Distribution with Gender Proportion") +
+    scale_x_continuous(breaks = seq(10, 80, by = 10)) +
+    theme_minimal(base_size = 16) +  
+    theme(
+        plot.title = element_text( size = 18, hjust = 0.5, face = "bold"),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 14),
+        legend.position = "top",
+        axis.title = element_text(size = 16, face = "bold")
+    ) +
+    scale_fill_manual(values = c("male" = "#1f77b4", "female" = "#ff7f0e")) 
+```
+
+```{r}
+ggsave("./images/age_distribution.png", width =12, height = 6, bg="white" ,dpi = 300)
+```
+
+
+## Model performance
+
+```{r}
+predicted_age <- read_tsv("./data/plots_data/predicted_age_best_model.tsv")
+predicted_val <- predicted_age$predicted_age
+```
+
+
+```{r}
+  plot_data <- data.frame(y = samples_healthy$age,
+                          predicted_values = predicted_val, 
+                          dataset = samples_healthy$dataset )
+    p <- ggplot(plot_data, aes(x = predicted_values , y = y ,fill = dataset)) +
+        geom_point( size = 2, shape = 21, stroke = 0.5) +
+        labs(  title = "Chronologic age  vs Predicted age",
+               x = "Predicted age (years) ",
+               y = "Chronological age (years)"
+        ) + theme_minimal()+
+      geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "black")
+    p+
+  ggtitle("Model prediction")+
+  theme_minimal(base_size = 18)+
+  theme(legend.text=element_text(size=12),
+        legend.title = element_text(size=12))
+```
+
+```{r, echo=FALSE, include=FALSE,   eval=FALSE}
+ggsave("./images/prediction.png", width = 8, height = 6, bg="white" ,dpi = 300)
+```
+
+
+```{r}
+signatures <- get("genelist_all", envir = asNamespace("RNAAgeCalc"))
+log_sqrt <- read_tsv("./data/plots_data/pmbcAge_intersection.tsv")
+peters <- read_tsv("./data/plots_data/peters_1497_signature.csv")
+geneAge <- read_csv("./data/plots_data/genage_human.csv")
+gene_lists <- list( Peters = peters$symbol , #all_tissues
+                   GenAge = geneAge$symbol,
+                   GTExAge = names(signatures$all_tissues$GTExAge),
+                   PBMCAge = log_sqrt$symbol  )
+
+all_genes <- unique(unlist(gene_lists))
+
+upset_data <- map_dfc(gene_lists, ~ all_genes %in% .x)
+colnames(upset_data) <- names(gene_lists)
+upset_data <- cbind(Gene = all_genes, upset_data)
+```
+
+```{r}
+upset(
+  upset_data,
+  name = "",
+  intersect = c( "Peters",  "GenAge","GTExAge","PBMCAge"),
+  wrap=TRUE,
+  set_sizes = ( upset_set_size( )+ 
+                  theme(axis.text.x = element_text(size = 14, color = "black"),
+                        axis.title = element_text(size = 14, color = "black"),
+                        axis.ticks.x = element_line(color="black"))
+                ),
+  base_annotations = list(
+    'Intersection size' = intersection_size(
+      mapping=aes(fill="magenta"),
+      show.legend=FALSE,
+      counts = TRUE
+    ) + theme(
+      axis.text.x =element_blank(),
+      axis.title = element_text(size = 16),
+      axis.text = element_text(size = 14, color = "black"),
+      axis.ticks.y = element_line(color="black")
+    )
+  ),
+   themes=upset_modify_themes(
+        list(
+            'intersections_matrix'=theme(axis.text=element_text(size=14, color="black"))
+            #'overall_sizes'=theme(axis.text.x=element_text(angle=90))
+        )
+    ),
+  queries = list(
+    upset_query(set = "Peters", fill = "#0072B2"),
+    upset_query(set = "GenAge", fill = "#D55E00"),
+    upset_query(set = "GTExAge", fill = "#009E73"),
+    upset_query(set = "PBMCAge", fill = "#CC79A7")
+  ),
+  min_size = 1
+) + 
+  theme_minimal(base_size = 18) +
+  theme(
+    #plot.title = element_text()
+    #axis.text.y = element_text(size = 14, color = "blue"),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),  # Remove x-axis title
+    axis.text.x  = element_blank()#,  # Remove x-axis labels
+   # axis.ticks.x = element_blank()   # Remove x-axis ticks
+  )  +
+ggtitle('Signatures intersection')+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r, echo=FALSE, include=FALSE,   eval=FALSE}
+ggsave("./images/signatures_intersection.png", width = 8, height = 6, bg="white" ,dpi = 300)
+```
+
+
+```{r}
+long_stats_to_plot <- read_tsv("./data/plots_data/performance_with_random_genes.tsv")
+significant_genes_stats <- read_tsv("./data/plots_data/performance_with_significant_genes.tsv")
+
+long_stats_to_plot$num_genes_f <- as.factor(long_stats_to_plot$num_genes)
+test_data <- long_stats_to_plot %>% filter(type == "test")
+
+gene_sizes <- seq(50, 2000, by = 50) 
+nruns <- 10 
+nsamples <- 174
+
+ggplot() +
+  # --- Boxplot layer (test data only) ---
+  geom_boxplot(
+    data = test_data,
+    aes(x = num_genes, y = r2, group = as.factor(num_genes_f),fill = "Random selection" ), 
+    alpha = 0.4, color = "grey40",
+    width = 30, outlier.shape = 21, outlier.size = 1.5
+  ) +
+  # --- Line + points (best model data) ---
+  geom_line(
+    data = significant_genes_stats,
+    aes(x = num_genes, y = r2, color = "Rational selection"),
+    linewidth = 1.2, alpha = 0.9
+  ) +
+  geom_point(
+    data = significant_genes_stats,
+    aes(x = num_genes, y = r2, color = "Rational selection"),
+    size = 3, alpha = 0.9
+  ) +
+ geom_vline(xintercept = 150, linetype = "dashed", color = "black", linewidth = 0.8) +
+  # --- Axis scales ---
+  scale_x_continuous(
+    breaks = c(seq(0, max(significant_genes_stats$num_genes), 500),150),
+    labels = function(x) ifelse(x == 150, "150", x),
+    minor_breaks = seq(0, max(significant_genes_stats$num_genes), 50)
+  ) +
+  scale_y_continuous(
+    limits = c(0.70, 0.9),
+    breaks = seq(0.70, 0.9, 0.04),
+    labels = label_number(accuracy = 0.01)
+  ) +
+  # --- Custom color/fill legends (Okabe–Ito palette) ---
+  scale_color_manual(
+    name = NULL,
+    values = c("Rational selection" = "#E69F00")
+  ) +
+  scale_fill_manual(
+    name = NULL,
+    values = c("Random selection" = "#56B4E9")
+  ) +
+  # --- Labels & theme ---
+  labs(
+    title = expression(paste("R"^2, " vs Number of Predictors")),
+    x = "Number of genes",
+    y = expression(R^2)
+  ) +
+  theme_classic(base_size = 14, base_family = "sans") +
+  theme(
+    plot.title = element_text(face = "bold", size = 18, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, color = "grey30", hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(size=16,color = "black"),
+    panel.grid.major.y = element_line(color = "grey90", linewidth = 0.3),
+    axis.line = element_line(color = "black", linewidth = 0.4),
+        legend.position = "top",
+    legend.text = element_text(size = 14, face = "bold")
+  )
+```
+
+```{r, echo=FALSE, include=FALSE,   eval=FALSE}
+ggsave("./images/performance_comparison.png", width = 8, height = 6, bg="white" ,dpi = 300)
+```
+
+
+
+
