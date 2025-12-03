@@ -5,7 +5,9 @@ Bayesian Age Determination from Gene Expression.
 This repository contains all R code, workflows and resources associated with the research article:
 
 > Title
+> 
 > Veronica Suaste, Maria L. Daza-Torres, J. Cricelio Montesino-Lopez, Hilde Loge Nilsen.
+> 
 > Journal
 
 In this research we used a Bayesian framework for chronological age prediction based on transcriptomic data (RNA-seq).
