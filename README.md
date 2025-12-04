@@ -1,6 +1,5 @@
-# BADGE
-Bayesian Age Determination from Gene Expression.
-
+# BAGE
+A Bayesian mixed linear model for age prediction based on PBMC gene expression data
 ## Overview
 This repository contains all R code, workflows and resources associated with the research article:
 
