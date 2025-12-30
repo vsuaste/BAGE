@@ -3,7 +3,7 @@ A Bayesian mixed linear model for age prediction based on PBMC gene expression d
 ## Overview
 This repository contains all R code, workflows and resources associated with the research article:
 
-> Title
+> BAGE: A Bayesian framework for age prediction based on PBMC gene expression data
 > 
 > Veronica Suaste, Maria L. Daza-Torres, J. Cricelio Montesino-Lopez, Hilde Loge Nilsen.
 > 
