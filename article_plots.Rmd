@@ -9,6 +9,7 @@ library(RNAAgeCalc)
 library(ComplexUpset)
 library(patchwork)
 library(scales)
+library(viridis)
 ```
 
 ## Samples distribution
@@ -29,16 +30,16 @@ age_ranges <- samples_healthy %>%
 ggplot(samples_healthy, aes(x = age, y = Dataset_Intercept)) +
   geom_segment(data = age_ranges, aes(x = min_age, xend = max_age, y = Dataset_Intercept, yend = Dataset_Intercept),
               color = "grey", linewidth = 1.2) + 
-  geom_point(aes(color = dataset), size = 2.5) +  # Points for each sample
+  geom_point(aes(color = dataset), size = 3.5) +  # Points for each sample
   scale_y_continuous(breaks = unique(samples_healthy$Dataset_Intercept), labels = unique(samples_healthy$dataset)) + 
   labs(title = "Age Distribution by Dataset",
        x = "Age",
        y = "Dataset") +
   theme_minimal() +
   theme(
-    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-    axis.title = element_text(size = 16, face = "bold"),
-    axis.text = element_text(size = 14, color = "black"),
+    plot.title = element_text(size = 30, hjust = 0.5),
+    axis.title = element_text(size = 28),
+    axis.text = element_text(size = 28, color = "black"),
   )+
   theme(legend.position = "none")
 
@@ -54,13 +55,14 @@ ggplot(samples_healthy, aes(x = age, fill = gender)) +
     labs(x = "Age", y = "Number of samples", fill = "Gender",
          title = "Age Distribution with Gender Proportion") +
     scale_x_continuous(breaks = seq(10, 80, by = 10)) +
-    theme_minimal(base_size = 16) +  
+    theme_minimal(base_size = 20) +  
     theme(
-        plot.title = element_text( size = 18, hjust = 0.5, face = "bold"),
+        plot.title = element_text( size = 30, hjust = 0.5),
         legend.title = element_blank(),
-        legend.text = element_text(size = 14),
+        legend.text = element_text(size = 26),
         legend.position = "top",
-        axis.title = element_text(size = 16, face = "bold")
+        axis.title = element_text(size = 28),
+        axis.text = element_text(size = 28, color = "black")
     ) +
     scale_fill_manual(values = c("male" = "#1f77b4", "female" = "#ff7f0e")) 
 ```
@@ -83,7 +85,7 @@ predicted_val <- predicted_age$predicted_age
                           predicted_values = predicted_val, 
                           dataset = samples_healthy$dataset )
     p <- ggplot(plot_data, aes(x = predicted_values , y = y ,fill = dataset)) +
-        geom_point( size = 2, shape = 21, stroke = 0.5) +
+        geom_point( size = 4, shape = 21, stroke = 0.5) +
         labs(  title = "Chronologic age  vs Predicted age",
                x = "Predicted age (years) ",
                y = "Chronological age (years)"
@@ -91,25 +93,25 @@ predicted_val <- predicted_age$predicted_age
       geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "black")
     p+
   ggtitle("Model prediction")+
-  theme_minimal(base_size = 18)+
-  theme(legend.text=element_text(size=12),
-        legend.title = element_text(size=12))
+  theme_minimal(base_size = 28)+
+  theme(legend.text=element_text(size=26),
+        legend.title = element_text(size=26))
 ```
 
 ```{r, echo=FALSE, include=FALSE,   eval=FALSE}
-ggsave("./images/prediction.png", width = 8, height = 6, bg="white" ,dpi = 300)
+ggsave("./images/prediction.png", width = 12, height = 8, bg="white" ,dpi = 300)
 ```
 
 
 ```{r}
 signatures <- get("genelist_all", envir = asNamespace("RNAAgeCalc"))
-log_sqrt <- read_tsv("./data/plots_data/pmbcAge_intersection.tsv")
+log_sqrt <- read_tsv("./data/plots_data/pmbc_bage_intersection.tsv")
 peters <- read_tsv("./data/plots_data/peters_1497_signature.csv")
 geneAge <- read_csv("./data/plots_data/genage_human.csv")
-gene_lists <- list( Peters = peters$symbol , #all_tissues
+gene_lists <- list( Peters = peters$symbol, 
                    GenAge = geneAge$symbol,
                    GTExAge = names(signatures$all_tissues$GTExAge),
-                   PBMCAge = log_sqrt$symbol  )
+                   BAGE_PBMC = log_sqrt$symbol  )
 
 all_genes <- unique(unlist(gene_lists))
 
@@ -119,31 +121,32 @@ upset_data <- cbind(Gene = all_genes, upset_data)
 ```
 
 ```{r}
-upset(
+p <- upset(
   upset_data,
   name = "",
-  intersect = c( "Peters",  "GenAge","GTExAge","PBMCAge"),
+  intersect = c( "Peters",  "GenAge","GTExAge","BAGE_PBMC"),
   wrap=TRUE,
   set_sizes = ( upset_set_size( )+ 
-                  theme(axis.text.x = element_text(size = 14, color = "black"),
-                        axis.title = element_text(size = 14, color = "black"),
+                  theme(axis.text.x = element_text(size = 18, color = "black"),
+                        axis.title = element_text(size = 18, color = "black"),
                         axis.ticks.x = element_line(color="black"))
                 ),
   base_annotations = list(
     'Intersection size' = intersection_size(
+      text=list(size=5),
       mapping=aes(fill="magenta"),
       show.legend=FALSE,
       counts = TRUE
     ) + theme(
       axis.text.x =element_blank(),
-      axis.title = element_text(size = 16),
-      axis.text = element_text(size = 14, color = "black"),
+      axis.title = element_text(size = 28),
+      axis.text = element_text(size = 28, color = "black"),
       axis.ticks.y = element_line(color="black")
     )
   ),
    themes=upset_modify_themes(
         list(
-            'intersections_matrix'=theme(axis.text=element_text(size=14, color="black"))
+            'intersections_matrix'=theme(axis.text=element_text(size=28, color="black"))
             #'overall_sizes'=theme(axis.text.x=element_text(angle=90))
         )
     ),
@@ -151,11 +154,11 @@ upset(
     upset_query(set = "Peters", fill = "#0072B2"),
     upset_query(set = "GenAge", fill = "#D55E00"),
     upset_query(set = "GTExAge", fill = "#009E73"),
-    upset_query(set = "PBMCAge", fill = "#CC79A7")
+    upset_query(set = "BAGE_PBMC", fill = "#CC79A7")
   ),
   min_size = 1
 ) + 
-  theme_minimal(base_size = 18) +
+  theme_minimal(base_size = 30) +
   theme(
     #plot.title = element_text()
     #axis.text.y = element_text(size = 14, color = "blue"),
@@ -166,10 +169,11 @@ upset(
   )  +
 ggtitle('Signatures intersection')+
   theme(plot.title = element_text(hjust = 0.5))
+p
 ```
 
 ```{r, echo=FALSE, include=FALSE,   eval=FALSE}
-ggsave("./images/signatures_intersection.png", width = 8, height = 6, bg="white" ,dpi = 300)
+ggsave("./images/signatures.png",p, width =12, height = 8, bg="white" ,dpi = 300)
 ```
 
 
@@ -184,7 +188,7 @@ gene_sizes <- seq(50, 2000, by = 50)
 nruns <- 10 
 nsamples <- 174
 
-ggplot() +
+p <- ggplot() +
   # --- Boxplot layer (test data only) ---
   geom_boxplot(
     data = test_data,
@@ -226,25 +230,122 @@ ggplot() +
   ) +
   # --- Labels & theme ---
   labs(
-    title = expression(paste("R"^2, " vs Number of Predictors")),
+    title = expression(paste("R"^2, " vs number of predictors")),
     x = "Number of genes",
     y = expression(R^2)
   ) +
-  theme_classic(base_size = 14, base_family = "sans") +
+  theme_classic(base_size = 30) +
   theme(
-    plot.title = element_text(face = "bold", size = 18, hjust = 0.5),
-    plot.subtitle = element_text(size = 12, color = "grey30", hjust = 0.5),
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(size=16,color = "black"),
+    plot.title = element_text( size = 30, hjust = 0.5),
+    #plot.subtitle = element_text(size = 12, color = "grey30", hjust = 0.5),
+    axis.title = element_text(size=28),
+    axis.text = element_text(color = "black", size=28),
     panel.grid.major.y = element_line(color = "grey90", linewidth = 0.3),
     axis.line = element_line(color = "black", linewidth = 0.4),
         legend.position = "top",
-    legend.text = element_text(size = 14, face = "bold")
+    legend.text = element_text(size = 26)
   )
+p
 ```
 
-```{r, echo=FALSE, include=FALSE,   eval=FALSE}
-ggsave("./images/performance_comparison.png", width = 8, height = 6, bg="white" ,dpi = 300)
+```{r}
+ggsave("./images/performance_behaviour.png",p, width =12, height = 8, bg="white" ,dpi = 300)
+```
+
+
+```{r}
+
+df <- read_tsv("./data/plots_data/enrichment_analysis.tsv")
+
+df$term_description <- factor(df$`term description`,
+                              levels = df$`term description`[order(df$signal)])
+
+df$observed_gene_count <- df$`observed gene count` 
+df$false_discovery_rate <- df$`false discovery rate`
+
+p <- ggplot(df, aes(y = term_description)) +
+  # Lollipop stems, colored by FDR
+  geom_segment(aes(x = 0, xend = signal,
+                   yend = term_description,
+                   color = false_discovery_rate),
+               linewidth = 2.1, alpha = 0.9) +
+  geom_point(aes(x = signal,
+                 color = false_discovery_rate),
+             size = 5, 
+             alpha = 0.95) +
+  scale_color_viridis(
+    option = "C",
+    direction = 1,
+    trans = "log10",
+    name = "FDR"
+  ) +
+  scale_y_discrete(labels = label_wrap(30))+
+  theme_classic(base_size = 28) +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_text( size = 28),
+    axis.text.y = element_text(size = 28, color = "black"),
+    axis.text.x = element_text(size = 28, color = "black"),
+    #plot.title = element_text(hjust = 0.5, face = "bold", size = 15),
+    legend.position = "right",
+    legend.box.just = "left",
+    panel.grid.major.x = element_line(color = "grey90", linewidth = 0.3),
+    panel.grid.minor = element_blank()
+  ) +
+  labs(
+    #title = "Enrichment Lollipop Plot",
+    x = "Signal"
+  )
+p
+```
+
+
+```{r}
+ggsave("./images/enrichment_analysis.png",p, width =12, height = 6, bg="white" ,dpi = 300)
+```
+
+
+```{r}
+
+df$labels <- df$`matching proteins in your network (labels)`
+terms_6 <- df[c(1,2,3,6,7,8),, drop=TRUE ]
+
+terms_6$term_description <- factor(terms_6$term_description,
+                              levels = terms_6$term_description[order(terms_6$signal)])
+
+df_long <-  df %>%
+  mutate(labels = strsplit(labels, ",")) %>%
+  unnest(labels) %>%
+  mutate(labels = trimws(labels))  # clean spaces
+
+# Create a binary membership matrix (term × gene)
+membership <- df_long %>%
+  mutate(value = 1) %>%
+  complete(term_description, labels, fill = list(value = 0))
+
+p <- ggplot(membership, aes(x = labels, y = term_description, fill = factor(value))) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  scale_fill_manual(
+    values = c("0" = "grey95", "1" = viridis(1, option = "C")),
+    name = "Gene\nmembership"
+  ) +
+  scale_y_discrete(labels = label_wrap(35))+
+  theme_minimal(base_size = 28) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 28, color = "black"),
+    axis.text.y = element_text(size = 28, color = "black"),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    legend.position = "none"
+    #plot.title = element_text(face = "bold", size = 14, hjust = 0.5)
+  )
+
+p
+```
+
+
+```{r}
+ggsave("./images/membership_genes.png",p, width =12, height = 6, bg="white" ,dpi = 300)
 ```
 
 
