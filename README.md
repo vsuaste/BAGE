@@ -16,7 +16,7 @@ Particularly this analysis was developed with peripheral blood mononuclear cells
 ## Data
 All data used in the research is contained in the `./data` directory.
 
-- __file1_healthy_samples.tsv: __
+- __file1_healthy_samples.tsv:__
 
   Contains the metadata of all 174 healthy samples used in the research.
   The columns are metadata either found directly in the SRA, in the article related to the dataset or otherwise created from the original data.
@@ -28,22 +28,22 @@ All data used in the research is contained in the `./data` directory.
   - library - either "paired" or "single"
   - instrument - sequencing instrument used to generate the reads. Information taken from metadata in the SRA.
 
-- __counts.tsv :__ 
+- __counts.tsv:__ 
 
   Contains raw counts for the 174 samples that we used in the research. Each column is a sample named with the SRA identifier (SRRXXXX). 
   Raw counts were obtained using STAR aligner, see methods in article.
   
-- __counts_rlog._tsv :__
+- __counts_rlog.tsv:__
 
   Contains the raw counts under the rlog transformation (see methods in article) for the 174 samples used in the research. Each column is a sample named with the SRA identifier (SRRXXXX). 
 
 ## Scripts
 
-- run_models.R
+- __run_models.R__
 
 
 ## Reproduce article plots 
 
 Data for generating plots is contained in the `./data/plots_data`
 
-- __article_plots.Rmd :__  This notebook reproduce all plots in the article.
+- __article_plots.Rmd:__  This notebook reproduce all plots in the article.
