@@ -1,0 +1,10 @@
+#clustering method	cluster number	cluster color	hex color	gene count	primary description	secondary description	tertiary description	protein names
+MCL	1	Red	#ff0000	17	Mixed, incl. Cytolysis, and Regulation of extrathymic T cell differentiation	-	-	GZMB, SH2D1B, GATA2, FGFBP2, KIR2DL1, CST7, TNFRSF4, KLRF1, TIGIT, FCGR3A, NCAM1, NKG7, PRF1, ADGRG1, SPON2, NRCAM, NEFL
+MCL	2	Brown	#ffb765	3	Activation of RAC1	-	-	RHOC, PAK6, ROBO1
+MCL	3	Dark Golden Rod	#a6b200	3	-	-	-	CD248, LRRN3, FBLN2
+MCL	4	Green	#a3ff65	3	-	-	-	KIF21A, CHN1, KIFC3
+MCL	5	Green 2	#00b217	3	-	-	-	MAMLD1, BNC2, DGKK
+MCL	6	Cyan	#65ffcc	2	-	-	-	LGALS1, S100A10
+MCL	7	Dark Cyan	#008eb2	2	Mast cell degranulation	-	-	PTGDR, PTGDS
+MCL	8	Blue	#658eff	2	-	-	-	MAF, MYO6
+MCL	9	Medium Blue	#2f00b2	2	Growth factor complex	-	-	PDGFB, IGFBP3
